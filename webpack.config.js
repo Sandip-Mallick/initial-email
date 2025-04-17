@@ -27,7 +27,7 @@ const createRuntimeConfig = () => {
   const configContent = `
     window.__env = {
       AZURE_OPENAI_API_KEY: "${process.env.AZURE_OPENAI_API_KEY || env.AZURE_OPENAI_API_KEY || ''}", 
-      AZURE_OPENAI_ENDPOINT: "${process.env.AZURE_OPENAI_ENDPOINT || env.AZURE_OPENAI_ENDPOINT || 'https://epmfl.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-02-15-previe'}"
+      AZURE_OPENAI_ENDPOINT: "${process.env.AZURE_OPENAI_ENDPOINT || env.AZURE_OPENAI_ENDPOINT || 'https://epmfl.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-02-15-preview'}"
     };
   `;
   
