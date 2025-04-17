@@ -1,5 +1,4 @@
 import { saveAs } from 'file-saver';
-import { OpenAIClient, AzureKeyCredential } from '@azure/openai';
 
 Office.onReady((info) => {
   // Check if we're in Outlook
@@ -62,15 +61,16 @@ function saveEmailAsJson() {
 }
 
 /**
- * Sends email content to Azure OpenAI for processing
+ * Sends email content to Azure OpenAI for processing using fetch API
  */
 async function sendToAzureOpenAI() {
   const statusElement = document.getElementById("status");
   const responseContainer = document.getElementById("response-container");
   
-  statusElement.innerText = "Sending to Azure OpenAI...";
+  statusElement.innerText = "Preparing to send to Azure OpenAI...";
   responseContainer.style.display = "none";
-  
+  document.getElementById("copy-button").style.display = "none";
+
   try {
     // Get the current item (email)
     const item = Office.context.mailbox.item;
@@ -82,7 +82,14 @@ async function sendToAzureOpenAI() {
     
     // Get email data
     item.body.getAsync(Office.CoercionType.Text, async (result) => {
-      if (result.status === Office.AsyncResultStatus.Succeeded) {
+      if (result.status !== Office.AsyncResultStatus.Succeeded) {
+        statusElement.innerText = `Error getting email body: ${result.error.message}`;
+        return;
+      }
+      
+      try {
+        statusElement.innerText = "Processing email content...";
+        
         const emailData = {
           subject: item.subject,
           sender: item.sender ? item.sender.emailAddress : "Unknown",
@@ -90,66 +97,195 @@ async function sendToAzureOpenAI() {
           bodyContent: result.value
         };
         
-        // Create prompt for Azure OpenAI
-        const prompt = `
-        Please analyze the following email and provide a brief summary:
+        // Hard-coded endpoint for testing
+        const endpoint = "https://epmfl.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-02-15-preview";
+        const apiKey = process.env.AZURE_OPENAI_API_KEY || "your_api_key_here";
         
-        Subject: ${emailData.subject}
-        From: ${emailData.sender}
-        Date: ${emailData.receivedTime}
+        if (apiKey === "your_api_key_here") {
+          statusElement.innerText = "Azure OpenAI API key not configured. Please add your key to the .env file.";
+          return;
+        }
         
-        Body:
-        ${emailData.bodyContent}
-        `;
+        console.log("Endpoint URL:", endpoint);
+        statusElement.innerText = "Generating legal response...";
         
+        // Prepare the request payload for chat completions
+        const payload = {
+          messages: [
+            {
+              role: "system",
+              content: "You are an AI assistant specialized in analyzing legal correspondence and generating appropriate follow-up emails. Your task is to analyze an email from Bhavesh Mistry (BM) to a client and generate a draft response following specific templates and guidelines."
+            },
+            {
+              role: "user",
+              content: `Input Format:
+1. Initial Email: The original email sent by BM to the client including the subject line
+2. Available Meeting Times: A list of dates and times when BM is available for meetings 
+3. Templates: Reference email templates to follow
+
+Here is the email to analyze:
+Subject: ${emailData.subject}
+From: ${emailData.sender}
+Date: ${emailData.receivedTime}
+Body:
+${emailData.bodyContent}
+
+Available Meeting Times:
+- Thursday, 27 March 2025 at 10:30am
+- Thursday, 27 March 2025 at 1:30pm
+- Thursday, 27 March 2025 at 2:30pm
+
+Analysis Requirements:
+1. Client Information:
+   - Extract all client names mentioned in the email greeting (e.g., "Hi Barry" → "Barry")
+   - Note if multiple clients are addressed (e.g., couples, business partners)
+2. Service Type:
+   - Determine if the email is about estate planning or non-estate planning
+   - Estate planning indicators include: "estate planning," "asset protection," "will," "enduring power of attorney," "estate plan," "SMSF Trust Deeds," "Family Trust Deeds"
+   - Non-estate planning might relate to: divorce, business matters, disputes, etc.
+3. Meeting Format:
+   - Identify if the meeting is proposed as:
+     • MS Teams meeting (if call then also MS Teams meeting unless noted specifically that call will be on mobile)
+     • In-person meeting at the office
+     • In-person meeting at another location (specify if mentioned)
+   - Default to "MS Teams meeting OR in-person meeting at our office" if unclear
+
+Response Generation Guidelines:
+1. Template Selection:
+   - Use Template B if the matter involves estate planning
+   - Use Template A for all other matters
+2. Email Structure:
+   - Begin with "Private and Confidential"
+   - Address the client by name
+   - Include "Conference" section with available meeting times
+   - For estate planning, include "Questionnaire" section with link
+   - End with standard closing and "Reply All" instruction
+3. Formatting Requirements:
+   - Maintain the exact formatting from the templates
+   - Present meeting times as bullet points
+   - Preserve all bold formatting for headings
+
+Template A (Non-Estate Planning):
+**Private and Confidential**
+ 
+Hi [client name]
+ 
+Further to Bhavesh Mistry's email correspondence today, we look forward to assisting you.
+ 
+**Conference**
+ 
+Please note, Bhavesh Mistry will be available at the following dates and times below for a **[meeting format]** with you for further discussion:
+ 
+- [date/time option 1]; or
+- [date/time option 2]; or
+- [date/time option 3].
+ 
+We look forward to hearing from you shortly.
+ 
+Please email us ensuring that you select \`Reply All\` to our email so our team can assist you.
+
+Template B (Estate Planning):
+**Private and Confidential**
+ 
+Hi [client name]
+ 
+Further to Bhavesh Mistry's email correspondence today, we look forward to assisting you with your estate planning.
+ 
+**Conference**
+ 
+To allow us to understand your intentions, Bhavesh Mistry will be available at the following dates and times below for a **[meeting format]** with you for an initial discussion of your estate planning:
+ 
+- [date/time option 1]; or
+- [date/time option 2]; or
+- [date/time option 3].
+ 
+Please kindly let us know if any of the above times are suitable and your best contact number. Alternatively, please let us know if there are any other dates and times more suitable for you.
+ 
+**Questionnaire**
+ 
+In preparation for our conference and to assist us in obtaining your initial information and allowing you to start considering your estate plan, please take a few minutes to complete our estate planning questionnaire at the following [link](https://mistryfallahi.com.au/client-asset-protection-enquiry/).
+ 
+We look forward to hearing from you shortly.
+ 
+Please email us ensuring that you select \`Reply All\` to our email so our team can assist you.
+
+Output Format:
+Your response should be the complete formatted email following the appropriate template.
+
+Important Notes:
+- Do not include placeholders in the final draft email. All fields should be properly populated.
+- Maintain exact formatting from templates including bold text, bullet points, and paragraph spacing.
+- If anything is unclear, default to the most conservative option.
+- The email subject line should have "Conference -" added at the beginning.
+- Date and time to be in this format: Thursday, 27 March 2025 at 10:30am, 1:30pm or 2:30pm.`
+            }
+          ],
+          max_tokens: 1000,
+          temperature: 0.2,
+          top_p: 0.95,
+          frequency_penalty: 0,
+          presence_penalty: 0
+        };
+        
+        console.log("Request payload:", JSON.stringify(payload).substring(0, 200) + "...");
+        
+        // Make the API call
         try {
-          // Initialize Azure OpenAI client
-          const endpoint = process.env.AZURE_OPENAI_ENDPOINT;
-          const apiKey = process.env.AZURE_OPENAI_API_KEY;
-          const deploymentName = process.env.AZURE_OPENAI_DEPLOYMENT_NAME;
+          const response = await fetch(endpoint, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'api-key': apiKey
+            },
+            body: JSON.stringify(payload)
+          });
           
-          if (!endpoint || !apiKey || !deploymentName) {
-            statusElement.innerText = "Azure OpenAI credentials not configured. Please check your .env file.";
+          console.log("Response status:", response.status, response.statusText);
+          
+          if (!response.ok) {
+            let errorMessage;
+            try {
+              const errorText = await response.text();
+              console.error("Error response:", errorText);
+              
+              try {
+                const errorData = JSON.parse(errorText);
+                errorMessage = errorData.error?.message || response.statusText;
+              } catch (parseError) {
+                errorMessage = `${response.status} ${response.statusText}. ${errorText}`;
+              }
+            } catch (textError) {
+              errorMessage = `${response.status} ${response.statusText}`;
+            }
+            
+            statusElement.innerText = `Error generating legal response: ${errorMessage}`;
             return;
           }
           
-          const client = new OpenAIClient(
-            endpoint,
-            new AzureKeyCredential(apiKey)
-          );
+          // Process successful response
+          const data = await response.json();
+          console.log("Response data:", data);
           
-          // Get response from Azure OpenAI
-          const response = await client.getCompletions(
-            deploymentName,
-            [prompt],
-            {
-              maxTokens: 800,
-              temperature: 0.7,
-              topP: 0.95,
-              frequencyPenalty: 0,
-              presencePenalty: 0,
-              stopSequences: ["---"]
-            }
-          );
-          
-          // Display the response
-          if (response.choices && response.choices.length > 0) {
-            const aiResponse = response.choices[0].text.trim();
+          if (data.choices && data.choices.length > 0) {
+            const aiResponse = data.choices[0].message.content.trim();
             responseContainer.innerText = aiResponse;
             responseContainer.style.display = "block";
-            statusElement.innerText = "Response received from Azure OpenAI!";
+            document.getElementById("copy-button").style.display = "inline-block";
+            statusElement.innerText = "Email response generated!";
           } else {
-            statusElement.innerText = "No response received from Azure OpenAI.";
+            statusElement.innerText = "No content in the response from Azure OpenAI.";
           }
-        } catch (error) {
-          console.error("Azure OpenAI API error:", error);
-          statusElement.innerText = `Azure OpenAI Error: ${error.message}`;
+        } catch (fetchError) {
+          console.error("Fetch error:", fetchError);
+          statusElement.innerText = `Network error: ${fetchError.message}`;
         }
-      } else {
-        statusElement.innerText = `Error getting email body: ${result.error.message}`;
+      } catch (processingError) {
+        console.error("Processing error:", processingError);
+        statusElement.innerText = `Error processing email: ${processingError.message}`;
       }
     });
   } catch (error) {
+    console.error("General error:", error);
     statusElement.innerText = `Error: ${error.message}`;
   }
 }

@@ -25,12 +25,7 @@ build/
 *.swo
 
 # Certificate Files
-certs/*.key
-certs/*.crt
-certs/*.pem
-certs/*.srl
-certs/*.p12
-certs/*.pfx
+
 
 # Build artifacts
 *.tsbuildinfo

@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Initial Email Add-in</title>
+    <title>Legal Email Response Generator</title>
 
     <!-- Office JavaScript API -->
     <script type="text/javascript" src="https://appsforoffice.microsoft.com/lib/1.1/hosted/office.js"></script>
@@ -69,21 +69,53 @@
             padding: 10px;
             border-radius: 4px;
             display: none;
+            white-space: pre-wrap;
+            font-family: "Segoe UI", sans-serif;
+            line-height: 1.5;
+        }
+        
+        #response-container strong {
+            font-weight: bold;
+            display: block;
+            margin-top: 10px;
+            margin-bottom: 10px;
+        }
+        
+        #copy-button {
+            margin-top: 10px;
+            display: none;
         }
     </style>
 </head>
 
 <body class="ms-font-m ms-Fabric">
     <div id="app">
-        <h2 id="app-title">Initial Email</h2>
+        <h2 id="app-title">Legal Email Response Generator</h2>
         <button id="save-button" class="ms-Button">
             <span class="ms-Button-label">Save Email as JSON</span>
         </button>
         <button id="openai-button" class="ms-Button">
-            <span class="ms-Button-label">Send to Azure OpenAI</span>
+            <span class="ms-Button-label">Generate Legal Response</span>
         </button>
         <div id="status"></div>
         <div id="response-container"></div>
+        <button id="copy-button" class="ms-Button">
+            <span class="ms-Button-label">Copy Response</span>
+        </button>
     </div>
+    
+    <script>
+        // Add a copy to clipboard function
+        document.getElementById('copy-button').addEventListener('click', function() {
+            const responseText = document.getElementById('response-container').innerText;
+            navigator.clipboard.writeText(responseText)
+                .then(() => {
+                    document.getElementById('status').innerText = "Response copied to clipboard!";
+                })
+                .catch(err => {
+                    document.getElementById('status').innerText = "Failed to copy: " + err;
+                });
+        });
+    </script>
 </body>
 </html> 

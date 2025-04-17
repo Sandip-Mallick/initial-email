@@ -49,9 +49,8 @@ An Outlook Add-in that allows you to extract the body text of a selected email, 
    - Create a `.env` file in the project root
    - Add your Azure OpenAI credentials:
      ```
-     AZURE_OPENAI_ENDPOINT=your_endpoint_here  # e.g. https://your-resource-name.openai.azure.com/
+     AZURE_OPENAI_ENDPOINT=your_full_endpoint_url_here  # e.g. https://your-resource-name.openai.azure.com/openai/deployments/your-deployment/chat/completions?api-version=2024-02-15-preview
      AZURE_OPENAI_API_KEY=your_api_key_here
-     AZURE_OPENAI_DEPLOYMENT_NAME=your_deployment_name_here
      ```
 6. Start the development server:
    ```
@@ -61,8 +60,8 @@ An Outlook Add-in that allows you to extract the body text of a selected email, 
 ## Azure OpenAI Setup
 
 1. Create an Azure OpenAI resource in the [Azure Portal](https://portal.azure.com)
-2. Deploy a model in your Azure OpenAI resource
-3. Get your endpoint URL and API key from the Azure Portal
+2. Deploy a model in your Azure OpenAI resource (e.g., GPT-4o)
+3. Get your full endpoint URL (including deployment name and API version) and API key from the Azure Portal
 4. Add these credentials to your `.env` file as shown above
 
 ## Sideloading the Add-in in Outlook

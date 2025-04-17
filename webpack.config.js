@@ -5,10 +5,15 @@ const dotenv = require('dotenv');
 
 // Load environment variables from .env file
 const env = dotenv.config().parsed || {};
+
+// Create a formatted object for DefinePlugin
 const envKeys = Object.keys(env).reduce((prev, next) => {
-  prev[`process.env.${next}`] = JSON.stringify(env[next]);
+  prev[`process.env.${next}`] = JSON.stringify(env[next].trim());
   return prev;
 }, {});
+
+// Log the environment variables for debugging
+console.log('Environment variables loaded:', Object.keys(envKeys));
 
 module.exports = {
   mode: 'development',
