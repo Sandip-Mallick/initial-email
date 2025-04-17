@@ -2,6 +2,7 @@ const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const webpack = require('webpack');
 const dotenv = require('dotenv');
+const fs = require('fs');
 
 // Load environment variables from .env file
 const env = dotenv.config().parsed || {};
@@ -19,6 +20,25 @@ Object.keys(process.env).forEach(key => {
     envKeys[`process.env.${key}`] = JSON.stringify(process.env[key].trim());
   }
 });
+
+// Create runtime-config.js to make env vars available at runtime
+const createRuntimeConfig = () => {
+  const configPath = path.resolve(__dirname, 'dist', 'runtime-config.js');
+  const configContent = `
+    window.__env = {
+      AZURE_OPENAI_API_KEY: "${process.env.AZURE_OPENAI_API_KEY || env.AZURE_OPENAI_API_KEY || '1BKg6MUwJWXQQXF7pMF8LnQEmCqVo0nZXaU0TobQjSyKwWxsGu7bJQQJ99BCAC77bzfXJ3w3AAABACOG3rL5'}",
+      AZURE_OPENAI_ENDPOINT: "${process.env.AZURE_OPENAI_ENDPOINT || env.AZURE_OPENAI_ENDPOINT || 'https://epmfl.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-02-15-preview'}"
+    };
+  `;
+  
+  // Ensure dist directory exists
+  if (!fs.existsSync(path.resolve(__dirname, 'dist'))) {
+    fs.mkdirSync(path.resolve(__dirname, 'dist'), { recursive: true });
+  }
+  
+  fs.writeFileSync(configPath, configContent);
+  console.log('Runtime config file created at:', configPath);
+};
 
 // Log the environment variables for debugging
 console.log('Environment variables loaded:', Object.keys(envKeys));
@@ -50,7 +70,15 @@ module.exports = {
       }
     },
     port: 3000,
-    hot: true
+    hot: true,
+    setupMiddlewares: (middlewares, devServer) => {
+      if (!devServer) {
+        throw new Error('webpack-dev-server is not defined');
+      }
+      
+      createRuntimeConfig();
+      return middlewares;
+    }
   },
   plugins: [
     new HtmlWebpackPlugin({
@@ -67,7 +95,14 @@ module.exports = {
       // Ensure process.env is defined in the browser
       'process.env': JSON.stringify({}),
       ...envKeys
-    })
+    }),
+    {
+      apply: (compiler) => {
+        compiler.hooks.afterEmit.tap('CreateRuntimeConfig', (compilation) => {
+          createRuntimeConfig();
+        });
+      }
+    }
   ],
   module: {
     rules: [

@@ -100,14 +100,26 @@ async function sendToAzureOpenAI() {
         // Hard-coded endpoint for testing
         const endpoint = "https://epmfl.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-02-15-preview";
         
-        // Safe access to process.env with fallback
+        // Try to get API key from various sources
         let apiKey;
         try {
-          apiKey = typeof process !== 'undefined' && process.env && process.env.AZURE_OPENAI_API_KEY 
-            ? process.env.AZURE_OPENAI_API_KEY 
-            : "your_api_key_here";
+          // First check window.__env from runtime-config.js
+          if (window.__env && window.__env.AZURE_OPENAI_API_KEY) {
+            apiKey = window.__env.AZURE_OPENAI_API_KEY;
+            console.log("Using API key from runtime config");
+          } 
+          // Fallback to process.env if available
+          else if (typeof process !== 'undefined' && process.env && process.env.AZURE_OPENAI_API_KEY) {
+            apiKey = process.env.AZURE_OPENAI_API_KEY;
+            console.log("Using API key from process.env");
+          } 
+          // Final fallback
+          else {
+            apiKey = "your_api_key_here";
+            console.log("No API key found in runtime config or process.env");
+          }
         } catch (e) {
-          console.error("Error accessing process.env:", e);
+          console.error("Error accessing API key:", e);
           apiKey = "your_api_key_here";
         }
         
