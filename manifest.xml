@@ -27,8 +27,8 @@
   <Description DefaultValue="Generate legal response emails using Azure OpenAI based on email templates."/>
 
   <!-- Icon for your add-in. Used on installation screens and the add-ins dialog. -->
-  <IconUrl DefaultValue="https://cdn-icons-png.freepik.com/256/15861/15861315.png"/>
-  <HighResolutionIconUrl DefaultValue="https://cdn-icons-png.freepik.com/256/15861/15861315.png"/>
+  <IconUrl DefaultValue="https://raw.githubusercontent.com/Sandip-Mallick/initial-email/refs/heads/main/assets/icon.png"/>
+  <HighResolutionIconUrl DefaultValue="https://raw.githubusercontent.com/Sandip-Mallick/initial-email/refs/heads/main/assets/icon.png"/>
 
   <!-- Domains that will be allowed when navigating. For example, if you use ShowTaskpane and then have an href link, navigation will only be allowed if the domain is on this list. -->
   <AppDomains>
@@ -116,9 +116,9 @@
 
     <Resources>
       <bt:Images>
-        <bt:Image id="Icon.16x16" DefaultValue="https://cdn-icons-png.freepik.com/256/15861/15861315.png"/>
-        <bt:Image id="Icon.32x32" DefaultValue="https://cdn-icons-png.freepik.com/256/15861/15861315.png"/>
-        <bt:Image id="Icon.80x80" DefaultValue="https://cdn-icons-png.freepik.com/256/15861/15861315.png"/>
+        <bt:Image id="Icon.16x16" DefaultValue="https://raw.githubusercontent.com/Sandip-Mallick/initial-email/refs/heads/main/assets/icon.png"/>
+        <bt:Image id="Icon.32x32" DefaultValue="https://raw.githubusercontent.com/Sandip-Mallick/initial-email/refs/heads/main/assets/icon.png"/>
+        <bt:Image id="Icon.80x80" DefaultValue="https://raw.githubusercontent.com/Sandip-Mallick/initial-email/refs/heads/main/assets/icon.png"/>
       </bt:Images>
       <bt:Urls>
         <bt:Url id="Commands.Url" DefaultValue="https://initial-email.onrender.com/commands.html"/>
