@@ -140,7 +140,7 @@ async function sendToAzureOpenAI() {
         }
         
         console.log("Endpoint URL:", endpoint);
-        statusElement.innerText = "Generating legal response...";
+        statusElement.innerText = "Generating AI response...";
         
         // Prepare the request payload for chat completions
         const payload = {
