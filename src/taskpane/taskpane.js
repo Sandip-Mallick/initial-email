@@ -3,9 +3,13 @@ import { saveAs } from 'file-saver';
 Office.onReady((info) => {
   // Check if we're in Outlook
   if (info.host === Office.HostType.Outlook) {
+    // Add event handlers for the buttons
     document.getElementById("save-button").onclick = saveEmailAsJson;
     document.getElementById("openai-button").onclick = sendToAzureOpenAI;
     document.getElementById("reply-button").onclick = replyWithResponse;
+    
+    // Log initialization
+    console.log("Add-in initialized in Outlook");
   }
 });
 
@@ -138,11 +142,14 @@ async function sendToAzureOpenAI() {
           messages: [
             {
               role: "system",
-              content: "You are an AI assistant specialized in analyzing legal correspondence and generating appropriate follow-up emails. Your task is to analyze an email from Bhavesh Mistry (BM) to a client and generate a draft response following specific templates and guidelines."
+              content: "You are an AI assistant specialized in analyzing legal correspondence and generating appropriate follow-up emails. Your task is to analyze an email from Bhavesh Mistry (BM) to a client and generate a draft response following specific templates and guidelines. Format your response using markdown for bold text (**bold**) and hyperlinks in the format [link text](URL)."
             },
             {
               role: "user",
-              content: `Input Format:
+              content: `AI Prompt for Email Analysis and Response Generation
+
+Input Format
+You will receive: 
 1. Initial Email: The original email sent by BM to the client including the subject line
 2. Available Meeting Times: A list of dates and times when BM is available for meetings 
 3. Templates: Reference email templates to follow
@@ -159,37 +166,40 @@ Available Meeting Times:
 - Thursday, 27 March 2025 at 1:30pm
 - Thursday, 27 March 2025 at 2:30pm
 
-Analysis Requirements:
-1. Client Information:
-   - Extract all client names mentioned in the email greeting (e.g., "Hi Barry" → "Barry")
-   - Note if multiple clients are addressed (e.g., couples, business partners)
-2. Service Type:
-   - Determine if the email is about estate planning or non-estate planning
-   - Estate planning indicators include: "estate planning," "asset protection," "will," "enduring power of attorney," "estate plan," "SMSF Trust Deeds," "Family Trust Deeds"
-   - Non-estate planning might relate to: divorce, business matters, disputes, etc.
-3. Meeting Format:
-   - Identify if the meeting is proposed as:
-     • MS Teams meeting (if call then also MS Teams meeting unless noted specifically that call will be on mobile)
-     • In-person meeting at the office
-     • In-person meeting at another location (specify if mentioned)
-   - Default to "MS Teams meeting OR in-person meeting at our office" if unclear
+Analysis Requirements
+Please analyze the initial email to identify:
+1.         Client Information:
+–          Extract all client names mentioned in the email greeting (e.g., "Hi Barry" → "Barry")
+–          Note if multiple clients are addressed (e.g., couples, business partners)
+2.         Service Type:
+–          Determine if the email is about estate planning or non-estate planning
+–          Estate planning indicators include: "estate planning," "asset protection," "will," "enduring power of attorney," "estate plan," "SMSF Trust Deeds," "Family Trust Deeds"
+–          Non-estate planning might relate to: divorce, business matters, disputes, etc.
+3.         Meeting Format:
+–          Identify if the meeting is proposed as:
+•           MS Teams meeting (if call then also MS Teams meeting unless noted specifically that call will be on mobile)
+•           In-person meeting at the office
+•           In-person meeting at another location (specify if mentioned)
+–          Default to "MS Teams meeting OR in-person meeting at our office" if unclear
 
-Response Generation Guidelines:
-1. Template Selection:
-   - Use Template B if the matter involves estate planning
-   - Use Template A for all other matters
-2. Email Structure:
-   - Begin with "Private and Confidential"
-   - Address the client by name
-   - Include "Conference" section with available meeting times
-   - For estate planning, include "Questionnaire" section with link
-   - End with standard closing and "Reply All" instruction
-3. Formatting Requirements:
-   - Maintain the exact formatting from the templates
-   - Present meeting times as bullet points
-   - Preserve all bold formatting for headings
+Response Generation Guidelines
+Based on your analysis:
+1.         Template Selection:
+–          Use Template B if the matter involves estate planning
+–          Use Template A for all other matters
+2.         Email Structure:
+–          Begin with "Private and Confidential"
+–          Address the client by name
+–          Include "Conference" section with available meeting times
+–          For estate planning, include "Questionnaire" section with link
+–          End with standard closing and "Reply All" instruction
+3.         Formatting Requirements:
+–          Maintain the exact formatting from the templates
+–          Present meeting times as bullet points
+–          Preserve all bold formatting for headings
 
-Template A (Non-Estate Planning):
+Template Reference
+Template A (Non-Estate Planning)
 **Private and Confidential**
  
 Hi [client name]
@@ -208,7 +218,7 @@ We look forward to hearing from you shortly.
  
 Please email us ensuring that you select \`Reply All\` to our email so our team can assist you.
 
-Template B (Estate Planning):
+Template B (Estate Planning)
 **Private and Confidential**
  
 Hi [client name]
@@ -233,15 +243,24 @@ We look forward to hearing from you shortly.
  
 Please email us ensuring that you select \`Reply All\` to our email so our team can assist you.
 
-Output Format:
-Your response should be the complete formatted email following the appropriate template.
+Output Format
+Your response should include ONLY the Draft Email which is completely formatted following the appropriate template. Do not include headings like "Analysis" or "Draft Email".
 
-Important Notes:
-- Do not include placeholders in the final draft email. All fields should be properly populated.
-- Maintain exact formatting from templates including bold text, bullet points, and paragraph spacing.
-- If anything is unclear, default to the most conservative option.
-- The email subject line should have "Conference -" added at the beginning.
-- Date and time to be in this format: Thursday, 27 March 2025 at 10:30am, 1:30pm or 2:30pm.`
+Example output structure:
+DRAFT EMAIL:
+**Subject: Conference - [Include the complete subject here]**
+[Complete formatted email]
+
+Important Notes
+•           Do not include section headings like "Analysis:" or "Draft Email:" in your response.
+•           Do not include placeholders in the final draft email. All fields should be properly populated.
+•           Maintain exact formatting from templates including bold text, bullet points, and paragraph spacing.
+•           If anything is unclear, default to the most conservative option and note your uncertainty in the analysis.
+•           The email subject line MUST have "Conference -" added at the beginning, followed by the complete original subject.
+•           For example: "Conference - Estate Planning - Paulina and Alex Pavlova (Our Ref: 10-0204)" 
+•           Date and time to be in this format: Thursday, 27 March 2025 at 10:30am, 1:30pm or 2:30pm.
+•           Use **bold** markdown formatting for headings and important text.
+•           Format the link in the questionnaire section as a proper markdown link [link](URL).`
             }
           ],
           max_tokens: 1000,
@@ -292,7 +311,30 @@ Important Notes:
           
           if (data.choices && data.choices.length > 0) {
             const aiResponse = data.choices[0].message.content.trim();
-            responseContainer.innerText = aiResponse;
+            
+            // Extract the draft email content from the response
+            let displayResponse = aiResponse;
+            
+            // First try to get content after "DRAFT EMAIL:" marker
+            if (aiResponse.includes("DRAFT EMAIL:")) {
+              displayResponse = aiResponse.split("DRAFT EMAIL:")[1].trim();
+            }
+            
+            // Also handle the case where response contains "### Draft Email:"
+            if (displayResponse.includes("### Draft Email:")) {
+              displayResponse = displayResponse.split("### Draft Email:")[1].trim();
+            }
+            
+            // Remove any analysis section if present
+            if (displayResponse.includes("### Analysis:")) {
+              displayResponse = displayResponse.split("### Analysis:")[1].trim();
+              // If the response contains both analysis and draft email sections
+              if (displayResponse.includes("### Draft Email:")) {
+                displayResponse = displayResponse.split("### Draft Email:")[1].trim();
+              }
+            }
+            
+            responseContainer.innerText = displayResponse;
             responseContainer.style.display = "block";
             document.getElementById("copy-button").style.display = "inline-block";
             document.getElementById("reply-button").style.display = "inline-block";
@@ -323,13 +365,23 @@ function replyWithResponse() {
   const responseContainer = document.getElementById("response-container");
   
   try {
-    statusElement.innerText = "Creating reply...";
+    statusElement.innerText = "Creating reply all...";
     
     // Get the response text
-    const responseText = responseContainer.innerText;
+    let responseText = responseContainer.innerText;
     if (!responseText) {
       statusElement.innerText = "No response generated yet.";
       return;
+    }
+    
+    // Remove any Analysis or Draft Email markers if they weren't cleaned up earlier
+    if (responseText.includes("### Analysis:")) {
+      responseText = responseText.split("### Analysis:")[1].trim();
+      if (responseText.includes("### Draft Email:")) {
+        responseText = responseText.split("### Draft Email:")[1].trim();
+      }
+    } else if (responseText.includes("### Draft Email:")) {
+      responseText = responseText.split("### Draft Email:")[1].trim();
     }
     
     // Get the current item (email)
@@ -339,16 +391,53 @@ function replyWithResponse() {
       statusElement.innerText = "No email selected";
       return;
     }
+
+    // Format the response with proper HTML styling
+    let formattedHtml = responseText;
     
-    // Create a reply
-    Office.context.mailbox.item.displayReplyForm({
-      htmlBody: responseText.replace(/\n/g, "<br>"),
-      subject: item.subject.startsWith("Conference -") ? 
-        item.subject : 
-        "Conference - " + item.subject
+    // Extract subject if it exists in the format **Subject: Some subject text**
+    let subjectText = "";
+    const subjectMatch = formattedHtml.match(/\*\*Subject:\s*(.*?)\*\*/i);
+    if (subjectMatch && subjectMatch[1]) {
+      subjectText = subjectMatch[1].trim();
+      // Remove the subject line from the body
+      formattedHtml = formattedHtml.replace(/\*\*Subject:\s*(.*?)\*\*\s*\n?/i, "");
+    }
+    
+    // Convert markdown-style bold (**text**) to HTML bold
+    formattedHtml = formattedHtml.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+    
+    // Convert URLs to hyperlinks (if not already in markdown format)
+    formattedHtml = formattedHtml.replace(
+      /(?<![\[\(])(https?:\/\/[^\s\)]+)(?![\]\)])/g, 
+      '<a href="$1">$1</a>'
+    );
+    
+    // Preserve markdown style links [text](url)
+    formattedHtml = formattedHtml.replace(
+      /\[([^\]]+)\]\(([^)]+)\)/g,
+      '<a href="$2">$1</a>'
+    );
+    
+    // Convert newlines to <br> tags
+    formattedHtml = formattedHtml.replace(/\n/g, "<br>");
+    
+    // Wrap the entire content in a div with Arial font and size 10
+    formattedHtml = `<div style="font-family: Arial, sans-serif; font-size: 10pt;">${formattedHtml}</div>`;
+    
+    // Use the subject from OpenAI response, or use the existing subject if none was provided
+    const replySubject = subjectText || 
+                        (item.subject.startsWith("Conference -") ? 
+                          item.subject : 
+                          "Conference - " + item.subject);
+    
+    // Create a Reply All with our HTML body
+    Office.context.mailbox.item.displayReplyAllForm({
+      htmlBody: formattedHtml,
+      subject: replySubject // Note: Outlook may still add "Re: " prefix
     });
     
-    statusElement.innerText = "Reply created with generated response.";
+    statusElement.innerText = "Reply All created with formatted response.";
   } catch (error) {
     console.error("Reply error:", error);
     statusElement.innerText = `Error creating reply: ${error.message}`;
