@@ -21,10 +21,20 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
+            justify-content: flex-start;
             margin: 0;
             padding: 20px;
             font-family: "Segoe UI", "Segoe UI Web (West European)", "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", sans-serif;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        #app {
+            width: 100%;
+            max-width: 600px;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
         }
         
         #app-title {
@@ -37,7 +47,7 @@
             flex-wrap: wrap;
             gap: 10px;
             justify-content: center;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
         }
         
         .ms-Button {
@@ -51,7 +61,7 @@
             padding: 0 16px;
             min-width: 80px;
             height: 32px;
-            border-radius: 2px;
+            border-radius: 6px;
             cursor: pointer;
             transition: all 0.1s ease-in-out;
         }
@@ -65,23 +75,34 @@
         }
         
         #status {
-            margin-top: 20px;
+            margin: 15px 0;
             min-height: 32px;
             text-align: center;
         }
         
+        .response-wrapper {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            min-height: 200px;
+            max-height: 400px;
+            margin-bottom: 60px; /* Space for the button below */
+        }
+        
         #response-container {
-            margin-top: 20px;
+            flex: 1;
             width: 100%;
-            max-width: 600px;
-            min-height: 100px;
             border: 1px solid #ccc;
-            padding: 10px;
-            border-radius: 4px;
+            padding: 15px;
+            border-radius: 8px;
             display: none;
             white-space: pre-wrap;
             font-family: "Segoe UI", sans-serif;
             line-height: 1.5;
+            overflow-y: auto;
+            background-color: #f9f9f9;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
         
         #response-container strong {
@@ -91,8 +112,22 @@
             margin-bottom: 10px;
         }
         
+        .action-buttons {
+            position: absolute;
+            bottom: -50px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
         #copy-button {
-            margin-top: 10px;
+            display: none;
+        }
+        
+        #reply-button {
             display: none;
         }
     </style>
@@ -108,15 +143,19 @@
             <button id="openai-button" class="ms-Button">
                 <span class="ms-Button-label">Generate Legal Response</span>
             </button>
-            <button id="reply-button" class="ms-Button" style="display: none;">
-                <span class="ms-Button-label">Reply with Response</span>
-            </button>
         </div>
         <div id="status"></div>
-        <div id="response-container"></div>
-        <button id="copy-button" class="ms-Button">
-            <span class="ms-Button-label">Copy Response</span>
-        </button>
+        <div class="response-wrapper">
+            <div id="response-container"></div>
+            <div class="action-buttons">
+                <button id="copy-button" class="ms-Button">
+                    <span class="ms-Button-label">Copy Response</span>
+                </button>
+                <button id="reply-button" class="ms-Button">
+                    <span class="ms-Button-label">Reply with Response</span>
+                </button>
+            </div>
+        </div>
     </div>
     
     <script>

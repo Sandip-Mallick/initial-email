@@ -71,11 +71,13 @@ function saveEmailAsJson() {
 async function sendToAzureOpenAI() {
   const statusElement = document.getElementById("status");
   const responseContainer = document.getElementById("response-container");
+  const copyButton = document.getElementById("copy-button");
+  const replyButton = document.getElementById("reply-button");
   
   statusElement.innerText = "Preparing to send to Azure OpenAI...";
   responseContainer.style.display = "none";
-  document.getElementById("copy-button").style.display = "none";
-  document.getElementById("reply-button").style.display = "none";
+  copyButton.style.display = "none";
+  replyButton.style.display = "none";
 
   try {
     // Get the current item (email)
@@ -334,11 +336,15 @@ Important Notes
               }
             }
             
+            // Show the response and action buttons
             responseContainer.innerText = displayResponse;
             responseContainer.style.display = "block";
-            document.getElementById("copy-button").style.display = "inline-block";
-            document.getElementById("reply-button").style.display = "inline-block";
+            copyButton.style.display = "inline-block";
+            replyButton.style.display = "inline-block";
             statusElement.innerText = "Email response generated!";
+            
+            // Auto-scroll to ensure buttons are visible
+            copyButton.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
           } else {
             statusElement.innerText = "No content in the response from Azure OpenAI.";
           }
@@ -400,7 +406,7 @@ function replyWithResponse() {
     const subjectMatch = formattedHtml.match(/\*\*Subject:\s*(.*?)\*\*/i);
     if (subjectMatch && subjectMatch[1]) {
       subjectText = subjectMatch[1].trim();
-      // Remove the subject line from the body
+      // Remove the subject line from the body but keep it in another variable
       formattedHtml = formattedHtml.replace(/\*\*Subject:\s*(.*?)\*\*\s*\n?/i, "");
     }
     
@@ -422,14 +428,23 @@ function replyWithResponse() {
     // Convert newlines to <br> tags
     formattedHtml = formattedHtml.replace(/\n/g, "<br>");
     
-    // Wrap the entire content in a div with Arial font and size 10
-    formattedHtml = `<div style="font-family: Arial, sans-serif; font-size: 10pt;">${formattedHtml}</div>`;
-    
     // Use the subject from OpenAI response, or use the existing subject if none was provided
     const replySubject = subjectText || 
                         (item.subject.startsWith("Conference -") ? 
                           item.subject : 
                           "Conference - " + item.subject);
+    
+    // Add the subject as plain text at the top of the email body for easy copying
+    let subjectHeader = "";
+    if (subjectText) {
+      subjectHeader = `${subjectText}<br><br>`;
+    }
+    
+    // Wrap the entire content in a div with Arial font and size 10
+    formattedHtml = `<div style="font-family: Arial, sans-serif; font-size: 10pt;">
+      ${subjectHeader}
+      ${formattedHtml}
+    </div>`;
     
     // Create a Reply All with our HTML body
     Office.context.mailbox.item.displayReplyAllForm({
@@ -437,7 +452,7 @@ function replyWithResponse() {
       subject: replySubject // Note: Outlook may still add "Re: " prefix
     });
     
-    statusElement.innerText = "Reply All created with formatted response.";
+    statusElement.innerText = "Reply All created with formatted response. The subject line is at the top of the email for easy copying.";
   } catch (error) {
     console.error("Reply error:", error);
     statusElement.innerText = `Error creating reply: ${error.message}`;
