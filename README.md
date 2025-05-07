@@ -124,9 +124,10 @@ EP-Admin/
 
 ### Available Email Templates
 
-- **Initial Email**: Generate a response to a client's first contact
-- **Conference for Draft Documents**: Schedule a meeting to discuss draft documents
-- **Conference for Signing Documents**: Schedule a meeting for document signing
+- **Sending Times**:
+- Initial Email: Generate a response to a client's first contact
+- Conference for Draft Documents: Schedule a meeting to discuss draft documents
+- Conference for Signing Documents: Schedule a meeting for document signing
 - **Reminders**:
   - Initial Email Reminder: Follow up on an unanswered initial contact
   - Draft Document Reminder: Remind about reviewing draft documents
